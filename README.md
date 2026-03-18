@@ -49,7 +49,7 @@ Below are introduced the steps of data cleaning followed with exploratory data a
 4. After transforming columns, I examine the number of missing values, and start imputation. Specifically, I used grouped conditional mode imputation by 'U.S._STATE' for categorical columns ['CLIMATE.CATEGORY', 'OUTAGE.START', 'OUTAGE.RESTORATION'], and grouped conditional median imputation by 'CLIMATE.REGION' for numerical columns ['MONTH', 'ANOMALY.LEVEL']. For following columns with low number of missing values ['CLIMATE.REGION', 'TOTAL.SALES'], I use conditional mode & median imputation, respectively.
 5. I scale columns representing percentages ['POPPCT_URBAN', 'AREAPCT_URBAN'] to proportions for suitibality with machine learning models later.
 
-Below are the 5 first rows of cleaned dataset with a group of columns selected.
+Below are the 5 first rows of cleaned dataset with a subset of columns selected for demonstration purposes.
 
 |   YEAR |   MONTH | U.S._STATE   | NERC.REGION   | CLIMATE.REGION     | CLIMATE.CATEGORY   |
 |-------:|--------:|:-------------|:--------------|:-------------------|:-------------------|
@@ -205,7 +205,7 @@ Alternative Hypothesis: Cause category distribution differs between summer and n
 
 TVD is the natural choice here since we are comparing two categorical distributions (cause category across seasons), and a 0.03 significance level gives us a slightly stricter threshold than the standard 0.05, reducing the chance of falsely concluding that season affects cause category when it does not.
 
-I ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000. Since p < 0.03, we reject the null hypothesis — cause category distributions differ significantly between summer and non-summer outages, suggesting season is a meaningful factor in what drives power outages. 
+I ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000. Since p < 0.03, we reject the null hypothesis — cause category distributions differ noticably between summer and non-summer outages, suggesting season is a meaningful factor in what drives power outages. 
 
 ### Distribution of TVD under Null Hypothesis
 
@@ -255,7 +255,7 @@ Performance:
 | Model | Test RMSE | Test MAE | Test R^2 |
 | Baseline (Linear Regression) | 6,878.90 min | 2,368.16 min | 0.4157 |
 | XGBoost | 6,918.50 min | 2,271.28 min | 0.5083 |
-**| Random Forest (Final) | 6,593.77 min | 2,143.86 min | 0.5129 |**
+| **Random Forest (Final)** | **6,593.77 min** | **2,143.86 min** | **0.5129** |
 
 Random Forest outperforms both the baseline and XGBoost on all three test metrics. The R^2 improvement from 0.4157 to 0.5129 means the final model explains about 10 percentage points more variance in outage duration on unseen data. The train R^2 of 0.7838 vs test R^2 of 0.5129 indicates some overfitting, but the test performance improvement over baseline confirms the engineered features and hyperparameter tuning meaningfully helped generalization. Note that the large RMSE relative to MAE across all models reflects the influence of a small number of extremely long outages.
 
