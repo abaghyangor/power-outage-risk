@@ -75,9 +75,11 @@ I have created a graph showcasing distribution of original outage duration value
   frameborder="0"
 ></iframe>
 
+
 ### Distribution of Month
 
 Below is the graph showing distribution of month values, I have created it to examine whether specific months contribute to most of, or higher number of power outages compared to others. As we can see, it appears that during summer season (June, July, August) the number of power outages is noticably higher than during other months, which is essential for our hypothesis test later on.
+
 
 <iframe
   src="assets/month_distribution.html"
@@ -86,9 +88,11 @@ Below is the graph showing distribution of month values, I have created it to ex
   frameborder="0"
 ></iframe>
 
+
 ### Distribution of Cause Category
 
 This graph represents the distribution of causes of power outages, its importance is in showcasing whether certain causes contribute to the majority of outages. Based on the graph, we can see significant proportion of power outages is caused by severe weather followed with a notable number of outages caused by intentational attacks.
+
 
 <iframe
   src="assets/cause_category_distribution.html"
@@ -96,3 +100,66 @@ This graph represents the distribution of causes of power outages, its importanc
   height="500"
   frameborder="0"
 ></iframe>
+
+## Bivariate Analysis
+
+I conducted two main bivariate analyses, both examined through scatter plots demonstrating the relationship between groups of variables.
+
+### Cause Category vs Month
+
+This scatter plot shows the distribution of outage durations (log-transformed) across each month, colored by cause category. Severe weather dominates across all months with generally higher durations, while causes like intentional attacks tend to cluster at lower durations. This suggests that both the time of year and the cause of an outage are meaningful predictors of how long an outage lasts, justifying their inclusion as features in our model.
+
+
+<iframe
+  src="assets/cause_vs_month.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+
+### Cause Category vs Customers Affected
+
+This scatter plot shows the relationship between the number of customers affected (log-transformed) and outage duration (log-transformed), colored by cause category. Severe weather outages tend to affect more customers and last longer, clustering in the upper right. The spread across cause categories suggests that customers affected and cause type together carry predictive signal for outage duration, making them important features for our regression models.
+
+
+<iframe
+  src="assets/cause_vs_customers.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+## Interesting Aggregates
+
+I have created two main groups to aggregate and examine their statistics for analysis, mainly grouping by Cause Category and NERC Region.
+
+### Cause Category Aggregation
+
+Grouping by cause category reveals that fuel supply emergencies have by far the highest mean duration (13,484 min) despite only 38 occurrences, while severe weather dominates in frequency (741 outages) with a high mean duration of 3,900 min. Intentional attacks are the most frequent cause but resolve relatively quickly (median 92.5 min), suggesting cause type is a strong signal for predicting duration.
+
+
+| CAUSE.CATEGORY        |   mean_duration |   median_duration |   total_customers |   mean_demand_loss |   outage_count |
+|:----------------------|----------------:|------------------:|------------------:|-------------------:|---------------:|
+| equipment failure     |        1850.56  |             224   |       3.05807e+06 |           380      |             54 |
+| fuel supply emergency |       13484     |            3960   |       1           |           634.174  |             38 |
+| intentional attack    |         521.934 |              92.5 |  356315           |            94.0556 |            332 |
+| islanding             |         200.545 |              77.5 |  209749           |           441.886  |             44 |
+| public appeal         |        1468.45  |             455   |  159994           |          2818.32   |             69 |
+
+
+### NERC Region Aggregation
+
+Grouping by grid region shows significant geographic variation — ECAR and RFC have the highest mean durations (5,603 and 3,767 min respectively) while PR and islanding-prone regions resolve much faster. ASCC shows NaN for duration despite having customers affected, indicating data quality issues for that region. This variability confirms that grid region is a meaningful feature for our model.
+
+
+| NERC.REGION   |   mean_duration |   median_duration |   total_customers |   mean_demand_loss |   outage_count |
+|:--------------|----------------:|------------------:|------------------:|-------------------:|---------------:|
+| ASCC          |         nan     |               nan |   14273           |             35     |              0 |
+| ECAR          |        5603.31  |              5475 |       8.20333e+06 |           1314.48  |             32 |
+| FRCC          |        4271.12  |              1419 |       1.27502e+07 |           1072.6   |             43 |
+| FRCC, SERC    |         372     |               372 |       0           |            nan     |              1 |
+| HECO          |         895.333 |               543 |  380186           |            466.667 |              3 |
+
+
+# Assessment of Missingness
