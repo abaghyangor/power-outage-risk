@@ -210,7 +210,7 @@ We ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000.
 ### Distribution of TVD under Null Hypothesis
 
 <iframe
-  src="power-outage-risk/assets/tvd_distribution.html"
+  src="assets/tvd_distribution.html"
   width="800"
   height="500"
   frameborder="0"
@@ -263,7 +263,7 @@ Random Forest outperforms both the baseline and XGBoost on all three test metric
 A test R^2 of 0.5129 is a meaningful improvement over the baseline but reflects the difficulty of predicting outage duration purely from pre-outage information. Duration is heavily influenced by post-outage factors such as repair crew response time and infrastructure damage extent, which are unavailable at prediction time. Given the dataset size (~1,400 rows) and these constraints, the model captures a reasonable portion of the explainable variance.
 
 <iframe
-  src="power-outage-risk/assets/model_performance.html"
+  src="assets/model_performance.html"
   width="800"
   height="500"
   frameborder="0"
@@ -292,7 +292,7 @@ Conclusion: We fail to reject the null hypothesis (p=0.3620 > 0.05). Despite the
 
 
 <iframe
-  src="power-outage-risk/assets/fairness_permutation.html"
+  src="assets/fairness_permutation.html"
   width="800"
   height="500"
   frameborder="0"
