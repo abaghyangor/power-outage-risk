@@ -210,7 +210,7 @@ We ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000.
 ### Distribution of TVD under Null Hypothesis
 
 <iframe
-  src="power-outage-risk/assets/permutation_tests.html"
+  src="power-outage-risk/assets/tvd_distribution.html"
   width="800"
   height="500"
   frameborder="0"
@@ -261,3 +261,39 @@ Performance:
 Random Forest outperforms both the baseline and XGBoost on all three test metrics. The R^2 improvement from 0.4157 to 0.5129 means the final model explains about 10 percentage points more variance in outage duration on unseen data. The train R^2 of 0.7838 vs test R^2 of 0.5129 indicates some overfitting, but the test performance improvement over baseline confirms the engineered features and hyperparameter tuning meaningfully helped generalization. Note that the large RMSE relative to MAE across all models reflects the influence of a small number of extremely long outages.
 
 A test R^2 of 0.5129 is a meaningful improvement over the baseline but reflects the difficulty of predicting outage duration purely from pre-outage information. Duration is heavily influenced by post-outage factors such as repair crew response time and infrastructure damage extent, which are unavailable at prediction time. Given the dataset size (~1,400 rows) and these constraints, the model captures a reasonable portion of the explainable variance.
+
+<iframe
+  src="power-outage-risk/assets/model_performance.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+
+# Fairness Analysis 
+
+Groups: High population states (population ≥ 9,309,449) vs Low population states (population < 9,309,449), split at the median.
+
+Evaluation Metric: RMSE — appropriate for regression tasks and directly comparable across groups.
+
+Null Hypothesis: Our model is fair. Any difference in RMSE between high and low population states is due to random chance.
+Alternative Hypothesis: Our model is unfair. It performs significantly differently for high population states compared to low population states.
+Test Statistic: |RMSE(High Population) − RMSE(Low Population)| — the absolute difference in RMSE between the two groups.
+Significance Level: 0.05
+
+Results:
+
+RMSE (High Population): 8,385.53 min
+RMSE (Low Population): 3,627.06 min
+Observed |RMSE diff|: 4,758.47 min
+P-value: 0.3620
+
+Conclusion: We fail to reject the null hypothesis (p=0.3620 > 0.05). Despite the raw RMSE difference of 4,758 minutes appearing large, the permutation test shows this difference is well within what we'd expect by random chance alone. The model does not appear to be  unfair across population groups. The higher RMSE for high population states likely indicates the presence of more extreme, large-scale outages in densely populated areas rather than a modeling bias.
+
+
+<iframe
+  src="power-outage-risk/assets/fairness_permutation.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
