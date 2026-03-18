@@ -49,12 +49,50 @@ Below are introduced the steps of data cleaning followed with exploratory data a
 4. After transforming columns, I examine the number of missing values, and start imputation. Specifically, I used grouped conditional mode imputation by 'U.S._STATE' for categorical columns ['CLIMATE.CATEGORY', 'OUTAGE.START', 'OUTAGE.RESTORATION'], and grouped conditional median imputation by 'CLIMATE.REGION' for numerical columns ['MONTH', 'ANOMALY.LEVEL']. For following columns with low number of missing values ['CLIMATE.REGION', 'TOTAL.SALES'], I use conditional mode & median imputation, respectively.
 5. I scale columns representing percentages ['POPPCT_URBAN', 'AREAPCT_URBAN'] to proportions for suitibality with machine learning models later.
 
-|   YEAR |   MONTH | U.S._STATE   | NERC.REGION   | CLIMATE.REGION     | CLIMATE.CATEGORY   |   ANOMALY.LEVEL | OUTAGE.START        | OUTAGE.RESTORATION   | CAUSE.CATEGORY     |   OUTAGE.DURATION |   DEMAND.LOSS.MW |   CUSTOMERS.AFFECTED |   TOTAL.SALES |   TOTAL.CUSTOMERS |   POPULATION |   POPPCT_URBAN |   POPDEN_URBAN |   AREAPCT_URBAN | SEASON     |
-|-------:|--------:|:-------------|:--------------|:-------------------|:-------------------|----------------:|:--------------------|:---------------------|:-------------------|------------------:|-----------------:|---------------------:|--------------:|------------------:|-------------:|---------------:|---------------:|----------------:|:-----------|
-|   2011 |       7 | Minnesota    | MRO           | East North Central | normal             |            -0.3 | 2011-07-01 17:00:00 | 2011-07-03 20:00:00  | severe weather     |              3060 |              nan |                70000 |   6.56252e+06 |           2595696 |      5348119 |         0.7327 |           2279 |          0.0214 | summer     |
-|   2014 |       5 | Minnesota    | MRO           | East North Central | normal             |            -0.1 | 2014-05-11 18:38:00 | 2014-05-11 18:39:00  | intentional attack |                 1 |              nan |                  nan |   5.28423e+06 |           2640737 |      5457125 |         0.7327 |           2279 |          0.0214 | non-summer |
-|   2010 |      10 | Minnesota    | MRO           | East North Central | cold               |            -1.5 | 2010-10-26 20:00:00 | 2010-10-28 22:00:00  | severe weather     |              3000 |              nan |                70000 |   5.22212e+06 |           2586905 |      5310903 |         0.7327 |           2279 |          0.0214 | non-summer |
-|   2012 |       6 | Minnesota    | MRO           | East North Central | normal             |            -0.1 | 2012-06-19 04:30:00 | 2012-06-20 23:00:00  | severe weather     |              2550 |              nan |                68200 |   5.78706e+06 |           2606813 |      5380443 |         0.7327 |           2279 |          0.0214 | summer     |
-|   2015 |       7 | Minnesota    | MRO           | East North Central | warm               |             1.2 | 2015-07-18 02:00:00 | 2015-07-19 07:00:00  | severe weather     |              1740 |              250 |               250000 |   5.97034e+06 |           2673531 |      5489594 |         0.7327 |           2279 |          0.0214 | summer     |
+Below are the 5 first rows of cleaned dataset with a group of columns selected.
+
+|   YEAR |   MONTH | U.S._STATE   | NERC.REGION   | CLIMATE.REGION     | CLIMATE.CATEGORY   |
+|-------:|--------:|:-------------|:--------------|:-------------------|:-------------------|
+|   2011 |       7 | Minnesota    | MRO           | East North Central | normal             |
+|   2014 |       5 | Minnesota    | MRO           | East North Central | normal             |
+|   2010 |      10 | Minnesota    | MRO           | East North Central | cold               |
+|   2012 |       6 | Minnesota    | MRO           | East North Central | normal             |
+|   2015 |       7 | Minnesota    | MRO           | East North Central | warm               |
 
 ## Univariate Analysis
+
+In this part of analysis, I have created several graphs to examine the distribution of variables in the dataset, namely distribution of 'OUTAGE.DURATION', 'MONTH', and 'CAUSE.CATEGORY'. Below are presented the graphs of these distributions with concise descriptions.
+
+### Distribution of Outage Duration
+
+I have created a graph showcasing distribution of original outage duration values, and log transformed values side-by-side to demonstrate the right-skeweness of the variable. As we can see in the original graph, vast majority of values are gathered on the rightmost side between 0-5k, while x-axis stretches to 100k with barely any values there. This is significant, as we are going to predict for outage duration, so we will have to log transform it to avoid skeweness.
+
+
+<iframe
+  src="assets/duration_distribution.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+### Distribution of Month
+
+Below is the graph showing distribution of month values, I have created it to examine whether specific months contribute to most of, or higher number of power outages compared to others. As we can see, it appears that during summer season (June, July, August) the number of power outages is noticably higher than during other months, which is essential for our hypothesis test later on.
+
+<iframe
+  src="assets/month_distribution.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+### Distribution of Cause Category
+
+This graph represents the distribution of causes of power outages, its importance is in showcasing whether certain causes contribute to the majority of outages. Based on the graph, we can see significant proportion of power outages is caused by severe weather followed with a notable number of outages caused by intentational attacks.
+
+<iframe
+  src="assets/cause_category_distribution.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
