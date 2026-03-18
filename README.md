@@ -150,7 +150,7 @@ Grouping by cause category reveals that fuel supply emergencies have by far the 
 
 ### NERC Region Aggregation
 
-Grouping by grid region shows significant geographic variation — ECAR and RFC have the highest mean durations (5,603 and 3,767 min respectively) while PR and islanding-prone regions resolve much faster. ASCC shows NaN for duration despite having customers affected, indicating data quality issues for that region. This variability confirms that grid region is a meaningful feature for our model.
+Grouping by grid region shows significant geographic variation — ECAR and RFC have the highest mean durations (5,603 and 3,767 min respectively) while PR and islanding-prone regions resolve much faster. ASCC shows NaN for duration despite having customers affected, indicating data quality issues for that region. This variability confirms that grid region is an important feature for our model.
 
 
 | NERC.REGION   |   mean_duration |   median_duration |   total_customers |   mean_demand_loss |   outage_count |
@@ -168,11 +168,11 @@ In this section, I am going to analyze the missingness mechanisms and dependenci
 
 ## MNAR Analysis
 
-I believe DEMAND.LOSS.MW is likely **MNAR (Missing Not At Random)**. The missingness in this column is plausibly related to its own value, utilities may be less likely to report demand loss figures when the loss is either negligibly small or embarrassingly large. This is a data generating process argument: the decision to record demand loss depends on the significance of the loss itself, which we cannot observe when it's missing. Additional data that could explain this missingness and potentially make it MAR would be utility company reporting compliance records or NERC filing requirements by region.
+I believe DEMAND.LOSS.MW is likely **MNAR (Missing Not At Random)**. The missingness in this column is plausibly related to its own value, utilities may be less likely to report demand loss figures when the loss is either negligibly small or embarrassingly large. This is a data generating process question: the decision to record demand loss depends on the significance of the loss itself, which we cannot observe when it's missing. Additional data that could explain this missingness and potentially make it MAR would be utility company reporting compliance records or NERC filing requirements by region.
 
 ## Missigness Dependency
 
-We analyzed the missingness of CUSTOMERS.AFFECTED (655 missing values) using permutation tests. We found that its missingness does depend on CAUSE.CATEGORY (TVD=0.756, p=0.000) — certain cause types are systematically more likely to have missing customer counts, making this MAR. However, the missingness does not depend on POPPCT_URBAN (difference in means=0.005, p=0.443) — the urban population percentage of a state has no relationship with whether customer data is reported.
+I analyzed the missingness of CUSTOMERS.AFFECTED (655 missing values) using permutation tests. I have found that its missingness does depend on CAUSE.CATEGORY (TVD=0.756, p=0.000) — certain cause types are systematically more likely to have missing customer counts, making this MAR. However, the missingness does not depend on POPPCT_URBAN (difference in means=0.005, p=0.443) — the urban population percentage of a state has no relationship with whether customer data is reported.
 
 To further demonstrate the missigness analysis performed for this section, I have attached two graphs below, one representing the distribution of CAUSE.CATEGORY by CUSTOMERS.AFFECTED missingness, and empirical distribution for both permutation tests of CAUSE.CATEGORY and POPPCT_URBAN side by side.
 
@@ -205,7 +205,7 @@ Alternative Hypothesis: Cause category distribution differs between summer and n
 
 TVD is the natural choice here since we are comparing two categorical distributions (cause category across seasons), and a 0.03 significance level gives us a slightly stricter threshold than the standard 0.05, reducing the chance of falsely concluding that season affects cause category when it does not.
 
-We ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000. Since p < 0.03, we reject the null hypothesis — cause category distributions differ significantly between summer and non-summer outages, suggesting season is a meaningful factor in what drives power outages. 
+I ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000. Since p < 0.03, we reject the null hypothesis — cause category distributions differ significantly between summer and non-summer outages, suggesting season is a meaningful factor in what drives power outages. 
 
 ### Distribution of TVD under Null Hypothesis
 
@@ -221,21 +221,21 @@ We ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000.
 
 Prediction Problem: **Regression — predicting OUTAGE.DURATION** (continuous, in minutes).
 
-Response Variable: OUTAGE.DURATION. Outage duration is the most operationally critical aspect of a power outage — knowing how long an outage will last helps utilities allocate repair resources, prioritize response urgency, and inform the public. It also connects directly to our hypothesis testing in Step 4, where we found that season significantly affects cause category, which in turn affects duration.
+Response Variable: OUTAGE.DURATION. Outage duration is one of the most critical aspect of a power outage — knowing how long an outage will last helps utilities allocate repair resources, prioritize response urgency, and inform the public. It also connects directly to my hypothesis testing in Step 4, where I have found that season significantly affects cause category, which in turn affects duration.
 
-Evaluation Metrics: RMSE and MAE. RMSE penalizes large prediction errors more heavily, which is appropriate here since severely underestimating a long outage has real consequences. MAE complements this by being easily interpretable in real units — an MAE of 500 means our predictions are off by 500 minutes on average. We report both since RMSE alone can be dominated by a few extreme outliers given the skewed nature of outage durations.
+Evaluation Metrics: RMSE and MAE. RMSE penalizes large prediction errors more heavily, which is appropriate here since severely underestimating a long outage has real consequences. MAE complements this by being easily interpretable in real units — an MAE of 500 means our predictions are off by 500 minutes on average. I report both since RMSE alone can be dominated by a few extreme outliers given the skewed nature of outage durations.
 
-Features at Time of Prediction: We only use information known at the moment an outage begins — CAUSE.CATEGORY, NERC.REGION, U.S._STATE, CLIMATE.REGION, CLIMATE.CATEGORY, ANOMALY.LEVEL, MONTH, SEASON, TOTAL.CUSTOMERS, POPULATION, POPPCT_URBAN, POPDEN_URBAN, and AREAPCT_URBAN. We explicitly exclude OUTAGE.RESTORATION, OUTAGE.START, DEMAND.LOSS.MW, and CUSTOMERS.AFFECTED as these are only fully known after or during the outage, not at prediction time.
+Features at Time of Prediction: I only use information known at the moment an outage begins — CAUSE.CATEGORY, NERC.REGION, U.S._STATE, CLIMATE.REGION, CLIMATE.CATEGORY, ANOMALY.LEVEL, MONTH, SEASON, TOTAL.CUSTOMERS, POPULATION, POPPCT_URBAN, POPDEN_URBAN, and AREAPCT_URBAN. I explicitly exclude OUTAGE.RESTORATION, OUTAGE.START, DEMAND.LOSS.MW, and CUSTOMERS.AFFECTED as these are only fully known after or during the outage, not at prediction time.
 
 # Baseline Model
 
 Baseline Model: Linear Regression with 10 features — CAUSE.CATEGORY (nominal, one-hot encoded), NERC.REGION (nominal, one-hot encoded), SEASON (nominal, one-hot encoded), CLIMATE.CATEGORY (ordinal, encoded as Cold=0/Normal=1/Warm=2), and six quantitative features (ANOMALY.LEVEL, TOTAL.CUSTOMERS, POPULATION, POPPCT_URBAN, POPDEN_URBAN, AREAPCT_URBAN) standardized with StandardScaler.The target OUTAGE.DURATION was log-transformed before fitting and predictions were inverted with expm1 before computing metrics.
 
 Performance:
-Train RMSE: 5,775.78 min, MAE: 2,131.38 min, R²: 0.4304. 
-Test RMSE: 6,878.90 min, MAE: 2,368.16 min, R²: 0.4157.
+Train RMSE: 5,775.78 min, MAE: 2,131.38 min, R^2: 0.4304. 
+Test RMSE: 6,878.90 min, MAE: 2,368.16 min, R^2: 0.4157.
 
-I believe this is not entirely a 'good' model. An MAE of ~2,368 minutes (~39 hours) on the test set is too large to be practically useful for predicting outage duration. The R² of 0.4157 means the model explains only about 42% of the variance in outage duration on unseen data. The gap between train R² (0.4304) and test R² (0.4157) is small, suggesting the model is not overfitting — it is simply underfitting, meaning Linear Regression lacks the capacity to capture the non-linear relationships in this data. This motivates upgrading to Random Forest and XGBoost in Step 7, which can model complex interactions between cause, region, and climate conditions without assuming linearity.
+I believe this is not entirely a 'good' model. An MAE of ~2,368 minutes (~39 hours) on the test set is too large to be practically useful for predicting outage duration. The R^2 of 0.4157 means the model explains only about 42% of the variance in outage duration on unseen data. The gap between train R^2 (0.4304) and test R^2 (0.4157) is small, suggesting the model is not overfitting — it is simply underfitting, meaning Linear Regression lacks the capacity to capture the non-linear relationships in this data. This motivates upgrading to Random Forest and XGBoost in Step 7, which can model complex interactions between cause, region, and climate conditions without assuming linearity.
 
 
 # Final Model
@@ -243,7 +243,7 @@ I believe this is not entirely a 'good' model. An MAE of ~2,368 minutes (~39 hou
 New Features Added:
 
 log(POPULATION) and log(TOTAL.CUSTOMERS) — both columns are heavily right-skewed (similar to outage duration itself), so log-transforming them compresses extreme values and makes their relationship with duration more linear and learnable by the model.
-ANOMALY.LEVEL² — climate anomaly likely has a non-linear effect on outage duration; mild anomalies may have little impact while extreme anomalies cause disproportionately longer outages, so squaring captures this accelerating effect.
+ANOMALY.LEVEL^2 — climate anomaly likely has a non-linear effect on outage duration; mild anomalies may have little impact while extreme anomalies cause disproportionately longer outages, so squaring captures this accelerating effect.
 MONTH_sin and MONTH_cos (cyclical encoding) — encoding month as two continuous cyclical features preserves the fact that December and January are adjacent seasons, which a raw integer encoding of 1–12 would miss entirely.
 
 Hyperparameters Tuned: max_depth, n_estimators, and min_samples_split for Random Forest; max_depth, n_estimators, and learning_rate for XGBoost. Both were tuned using 5-fold GridSearchCV scored on RMSE.
@@ -255,8 +255,7 @@ Performance:
 | Model | Test RMSE | Test MAE | Test R^2 |
 | Baseline (Linear Regression) | 6,878.90 min | 2,368.16 min | 0.4157 |
 | XGBoost | 6,918.50 min | 2,271.28 min | 0.5083 |
-| Random Forest (Final) | 6,593.77 min | 2,143.86 min | 0.5129 |
-
+**| Random Forest (Final) | 6,593.77 min | 2,143.86 min | 0.5129 |**
 
 Random Forest outperforms both the baseline and XGBoost on all three test metrics. The R^2 improvement from 0.4157 to 0.5129 means the final model explains about 10 percentage points more variance in outage duration on unseen data. The train R^2 of 0.7838 vs test R^2 of 0.5129 indicates some overfitting, but the test performance improvement over baseline confirms the engineered features and hyperparameter tuning meaningfully helped generalization. Note that the large RMSE relative to MAE across all models reflects the influence of a small number of extremely long outages.
 
@@ -276,8 +275,8 @@ Groups: High population states (population ≥ 9,309,449) vs Low population stat
 
 Evaluation Metric: RMSE — appropriate for regression tasks and directly comparable across groups.
 
-Null Hypothesis: Our model is fair. Any difference in RMSE between high and low population states is due to random chance.
-Alternative Hypothesis: Our model is unfair. It performs significantly differently for high population states compared to low population states.
+Null Hypothesis: The model is fair. Any difference in RMSE between high and low population states is due to random chance.
+Alternative Hypothesis: The model is unfair. It performs significantly differently for high population states compared to low population states.
 Test Statistic: |RMSE(High Population) − RMSE(Low Population)| — the absolute difference in RMSE between the two groups.
 Significance Level: 0.05
 
