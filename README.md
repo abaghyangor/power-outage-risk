@@ -199,3 +199,65 @@ To further demonstrate the missigness analysis performed for this section, I hav
 
 
 # Hypothesis Testing
+
+Null Hypothesis: Cause category distribution is independent of season (summer vs. non-summer).
+Alternative Hypothesis: Cause category distribution differs between summer and non-summer months.
+
+TVD is the natural choice here since we are comparing two categorical distributions (cause category across seasons), and a 0.03 significance level gives us a slightly stricter threshold than the standard 0.05, reducing the chance of falsely concluding that season affects cause category when it does not.
+
+We ran 10,000 permutations and obtained an observed TVD of 0.1493 with p=0.0000. Since p < 0.03, we reject the null hypothesis — cause category distributions differ significantly between summer and non-summer outages, suggesting season is a meaningful factor in what drives power outages. 
+
+### Distribution of TVD under Null Hypothesis
+
+<iframe
+  src="power-outage-risk/assets/permutation_tests.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+
+# Framing a Prediction Problem
+
+Prediction Problem: **Regression — predicting OUTAGE.DURATION** (continuous, in minutes).
+
+Response Variable: OUTAGE.DURATION. Outage duration is the most operationally critical aspect of a power outage — knowing how long an outage will last helps utilities allocate repair resources, prioritize response urgency, and inform the public. It also connects directly to our hypothesis testing in Step 4, where we found that season significantly affects cause category, which in turn affects duration.
+
+Evaluation Metrics: RMSE and MAE. RMSE penalizes large prediction errors more heavily, which is appropriate here since severely underestimating a long outage has real consequences. MAE complements this by being easily interpretable in real units — an MAE of 500 means our predictions are off by 500 minutes on average. We report both since RMSE alone can be dominated by a few extreme outliers given the skewed nature of outage durations.
+
+Features at Time of Prediction: We only use information known at the moment an outage begins — CAUSE.CATEGORY, NERC.REGION, U.S._STATE, CLIMATE.REGION, CLIMATE.CATEGORY, ANOMALY.LEVEL, MONTH, SEASON, TOTAL.CUSTOMERS, POPULATION, POPPCT_URBAN, POPDEN_URBAN, and AREAPCT_URBAN. We explicitly exclude OUTAGE.RESTORATION, OUTAGE.START, DEMAND.LOSS.MW, and CUSTOMERS.AFFECTED as these are only fully known after or during the outage, not at prediction time.
+
+# Baseline Model
+
+Baseline Model: Linear Regression with 10 features — CAUSE.CATEGORY (nominal, one-hot encoded), NERC.REGION (nominal, one-hot encoded), SEASON (nominal, one-hot encoded), CLIMATE.CATEGORY (ordinal, encoded as Cold=0/Normal=1/Warm=2), and six quantitative features (ANOMALY.LEVEL, TOTAL.CUSTOMERS, POPULATION, POPPCT_URBAN, POPDEN_URBAN, AREAPCT_URBAN) standardized with StandardScaler.The target OUTAGE.DURATION was log-transformed before fitting and predictions were inverted with expm1 before computing metrics.
+
+Performance:
+Train RMSE: 5,775.78 min, MAE: 2,131.38 min, R²: 0.4304. 
+Test RMSE: 6,878.90 min, MAE: 2,368.16 min, R²: 0.4157.
+
+I believe this is not entirely a 'good' model. An MAE of ~2,368 minutes (~39 hours) on the test set is too large to be practically useful for predicting outage duration. The R² of 0.4157 means the model explains only about 42% of the variance in outage duration on unseen data. The gap between train R² (0.4304) and test R² (0.4157) is small, suggesting the model is not overfitting — it is simply underfitting, meaning Linear Regression lacks the capacity to capture the non-linear relationships in this data. This motivates upgrading to Random Forest and XGBoost in Step 7, which can model complex interactions between cause, region, and climate conditions without assuming linearity.
+
+
+# Final Model
+
+New Features Added:
+
+log(POPULATION) and log(TOTAL.CUSTOMERS) — both columns are heavily right-skewed (similar to outage duration itself), so log-transforming them compresses extreme values and makes their relationship with duration more linear and learnable by the model.
+ANOMALY.LEVEL² — climate anomaly likely has a non-linear effect on outage duration; mild anomalies may have little impact while extreme anomalies cause disproportionately longer outages, so squaring captures this accelerating effect.
+MONTH_sin and MONTH_cos (cyclical encoding) — encoding month as two continuous cyclical features preserves the fact that December and January are adjacent seasons, which a raw integer encoding of 1–12 would miss entirely.
+
+Hyperparameters Tuned: max_depth, n_estimators, and min_samples_split for Random Forest; max_depth, n_estimators, and learning_rate for XGBoost. Both were tuned using 5-fold GridSearchCV scored on RMSE.
+
+Final Model: Random Forest with max_depth=10, min_samples_split=5, n_estimators=100.
+
+Performance:
+
+| Model | Test RMSE | Test MAE | Test R^2 |
+| Baseline (Linear Regression) | 6,878.90 min | 2,368.16 min | 0.4157 |
+| XGBoost | 6,918.50 min | 2,271.28 min | 0.5083 |
+| Random Forest (Final) | 6,593.77 min | 2,143.86 min | 0.5129 |
+
+
+Random Forest outperforms both the baseline and XGBoost on all three test metrics. The R^2 improvement from 0.4157 to 0.5129 means the final model explains about 10 percentage points more variance in outage duration on unseen data. The train R^2 of 0.7838 vs test R^2 of 0.5129 indicates some overfitting, but the test performance improvement over baseline confirms the engineered features and hyperparameter tuning meaningfully helped generalization. Note that the large RMSE relative to MAE across all models reflects the influence of a small number of extremely long outages.
+
+A test R^2 of 0.5129 is a meaningful improvement over the baseline but reflects the difficulty of predicting outage duration purely from pre-outage information. Duration is heavily influenced by post-outage factors such as repair crew response time and infrastructure damage extent, which are unavailable at prediction time. Given the dataset size (~1,400 rows) and these constraints, the model captures a reasonable portion of the explainable variance.
