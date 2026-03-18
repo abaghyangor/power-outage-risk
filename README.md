@@ -163,3 +163,39 @@ Grouping by grid region shows significant geographic variation — ECAR and RFC 
 
 
 # Assessment of Missingness
+
+In this section, I am going to analyze the missingness mechanisms and dependencies of specific columns within dataset that had substantial number of missing values, and/or are important for our prediction models.
+
+## MNAR Analysis
+
+I believe DEMAND.LOSS.MW is likely **MNAR (Missing Not At Random)**. The missingness in this column is plausibly related to its own value, utilities may be less likely to report demand loss figures when the loss is either negligibly small or embarrassingly large. This is a data generating process argument: the decision to record demand loss depends on the significance of the loss itself, which we cannot observe when it's missing. Additional data that could explain this missingness and potentially make it MAR would be utility company reporting compliance records or NERC filing requirements by region.
+
+## Missigness Dependency
+
+We analyzed the missingness of CUSTOMERS.AFFECTED (655 missing values) using permutation tests. We found that its missingness does depend on CAUSE.CATEGORY (TVD=0.756, p=0.000) — certain cause types are systematically more likely to have missing customer counts, making this MAR. However, the missingness does not depend on POPPCT_URBAN (difference in means=0.005, p=0.443) — the urban population percentage of a state has no relationship with whether customer data is reported.
+
+To further demonstrate the missigness analysis performed for this section, I have attached two graphs below, one representing the distribution of CAUSE.CATEGORY by CUSTOMERS.AFFECTED missingness, and empirical distribution for both permutation tests of CAUSE.CATEGORY and POPPCT_URBAN side by side.
+
+### Distribution plot (CAUSE.CATEGORY)
+
+
+<iframe
+  src="assets/missingness_cause.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+
+### Empirical permutation distribution for both tests side by side
+
+
+<iframe
+  src="assets/permutation_tests.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+
+# Hypothesis Testing
